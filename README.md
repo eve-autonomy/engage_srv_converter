@@ -14,5 +14,5 @@ This node acts as an interface to the autoware and outputs the input of pressing
 ## Node Graph
 ![node graph](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/eve-autonomy/engage_srv_converter/docs/node_graph.pu)
 
-## Parameter discription
+## Parameter description
 This node has no parameters.
