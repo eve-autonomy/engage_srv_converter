@@ -8,7 +8,7 @@ This node converts a button action from ros topic to service for the Autoware in
   - from engage_/[button_manager](https://github.com/eve-autonomy/button_manager/)
     - `engage_button_manager/output/engage_button` : Departure button input. (this topic is remapped from `/input/engage_button`.)
 - output
-  - to [autoware_state_machine](https://github.com/eve-autonomy/autoware_state_machine)
+  - to [autoware_state_machine](https://github.com/eve-autonomy/autoware_state_machine/)
     - `/api/external/set/engage` : Departure instructions to Autoware. It is provided by the ROS service, not the ROS msg.
 
 ## Node Graph
