@@ -12,7 +12,7 @@ This node converts a button action from ros topic to service for the Autoware in
     - `/api/external/set/engage` : Departure instructions to Autoware. This interface type is ROS2 service, not ROS2 message.
 
 ## Node Graph
-![node graph](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/eve-autonomy/engage_srv_converter/docs/node_graph.pu)
+![node graph](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/eve-autonomy/engage_srv_converter/main/docs/node_graph.pu)
 
 ## Parameter description
 This node has no parameters.
