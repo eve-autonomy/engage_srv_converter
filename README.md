@@ -1,7 +1,7 @@
 # engage service converter
 
 ## Overview
-This node acts as an interface to the autoware and outputs the input of pressing the departure button as the departure instruction of the autoware.
+This node converts a button action from ros topic to service for the Autoware interface.
 
 ## Input and Output
 - input
