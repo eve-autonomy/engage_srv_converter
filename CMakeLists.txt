@@ -37,6 +37,13 @@ rclcpp_components_register_node(engage_srv_converter
   PLUGIN "engage_srv_converter::EngageSrvConverter"
   EXECUTABLE engage_srv_converter_node)
 
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_double_button_judge test/test_double_button_judge.cpp)
+  target_include_directories(test_double_button_judge PRIVATE include)
+endif()
+
 ament_auto_package(INSTALL_TO_SHARE
+  config
   launch
 )

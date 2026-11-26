@@ -1,0 +1,24 @@
+# Copyright 2026 eve autonomy inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# use_double_button is set by the launch argument.
+/**:
+  ros__parameters:
+    # Double button engage: a press is valid when min_press_sec <= duration <= max_press_sec
+    # A press shorter than min_press_sec / longer than max_press_sec is invalid.
+    min_press_sec: 1.0
+    max_press_sec: 15.0
+
+    # Minimum time both buttons must be ON at the same time (TBD: not decided yet) [sec]
+    min_overlap_sec: 0.0

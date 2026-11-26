@@ -15,8 +15,15 @@
 -->
 
 <launch>
+  <!-- false: engage button alone (conventional) / true: engage button + delivery reservation button -->
+  <arg name="use_double_button" default="false" />
   <node pkg="engage_srv_converter" exec="engage_srv_converter_node" name="engage_srv_converter" output="screen">
     <param name="use_sim_time" value="$(env AW_ROS2_USE_SIM_TIME false)" />
+    <param from="$(find-pkg-share engage_srv_converter)/config/engage_srv_converter.param.yaml" />
+    <param name="use_double_button" value="$(var use_double_button)" />
     <remap from="input/engage_button" to="/engage_button_manager/output/engage_button" />
+    <remap from="output/double_engage_accepted" to="~/output/double_engage_accepted" />
+    <remap from="input/engage_button_pressed" to="/engage_button_manager/output/engage_button_pressed" />
+    <remap from="input/delivery_reservation_button_pressed" to="/delivery_reservation_button_manager/output/delivery_reservation_button_pressed" />
   </node>
 </launch>

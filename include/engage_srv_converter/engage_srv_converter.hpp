@@ -16,11 +16,16 @@
 #ifndef ENGAGE_SRV_CONVERTER__ENGAGE_SRV_CONVERTER_HPP_
 #define ENGAGE_SRV_CONVERTER__ENGAGE_SRV_CONVERTER_HPP_
 
+#include <memory>
+
 #include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/bool.hpp"
 
 #include "tier4_api_utils/tier4_api_utils.hpp"
 #include "tier4_external_api_msgs/srv/engage.hpp"
 #include "autoware_state_machine_msgs/msg/vehicle_button.hpp"
+
+#include "engage_srv_converter/double_button_judge.hpp"
 
 namespace engage_srv_converter
 {
@@ -39,12 +44,24 @@ private:
 
   // Subscription
   rclcpp::Subscription<VehicleButton>::SharedPtr sub_vehicle_button_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_engage_pressed_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_reservation_pressed_;
+  // Publisher (notifies that the double button engage was accepted)
+  rclcpp::Publisher<VehicleButton>::SharedPtr pub_double_engage_accepted_;
   // Client
   rclcpp::Client<ExternalEngage>::SharedPtr cli_engage_;
+
+  // use_double_button:
+  //   false: the engage button alone engages (conventional)
+  //   true : the engage button and the delivery reservation button must be pressed together
+  bool use_double_button_ = false;
+  std::unique_ptr<DoubleButtonJudge> judge_;
 
   // Callback
   void onVehicleButtonStatus(
     const autoware_state_machine_msgs::msg::VehicleButton::SharedPtr message);
+  void onButtonPressed(const DoubleButtonJudge::Button button, const bool pressed);
+  void sendEngage(const bool engage);
 };
 
 }  // namespace engage_srv_converter

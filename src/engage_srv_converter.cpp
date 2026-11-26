@@ -31,13 +31,44 @@ EngageSrvConverter::EngageSrvConverter(
   auto subscriber_option = rclcpp::SubscriptionOptions();
   subscriber_option.callback_group = group_;
 
+  use_double_button_ = this->declare_parameter<bool>("use_double_button");
+  DoubleButtonParams judge_params;
+  judge_params.min_press_sec = this->declare_parameter<double>("min_press_sec");
+  judge_params.max_press_sec = this->declare_parameter<double>("max_press_sec");
+  judge_params.min_overlap_sec = this->declare_parameter<double>("min_overlap_sec");
+  judge_ = std::make_unique<DoubleButtonJudge>(judge_params);
+
   // Subscription
-  sub_vehicle_button_ = this->create_subscription<autoware_state_machine_msgs::msg::VehicleButton>(
-    "input/engage_button",
-    rclcpp::QoS{1}.transient_local(),
-    std::bind(&EngageSrvConverter::onVehicleButtonStatus, this, _1),
-    subscriber_option
-  );
+  if (use_double_button_) {
+    // Double button: the "pressed" states of both buttons are judged.
+    // The conventional "input/engage_button" (engage button alone) is NOT used.
+    sub_engage_pressed_ = this->create_subscription<std_msgs::msg::Bool>(
+      "input/engage_button_pressed",
+      rclcpp::QoS{1}.transient_local(),
+      [this](const std_msgs::msg::Bool::ConstSharedPtr msg) {
+        onButtonPressed(DoubleButtonJudge::ENGAGE, msg->data);
+      },
+      subscriber_option);
+    sub_reservation_pressed_ = this->create_subscription<std_msgs::msg::Bool>(
+      "input/delivery_reservation_button_pressed",
+      rclcpp::QoS{1}.transient_local(),
+      [this](const std_msgs::msg::Bool::ConstSharedPtr msg) {
+        onButtonPressed(DoubleButtonJudge::RESERVATION, msg->data);
+      },
+      subscriber_option);
+    pub_double_engage_accepted_ = this->create_publisher<VehicleButton>(
+      "output/double_engage_accepted", rclcpp::QoS{10});
+    RCLCPP_INFO(this->get_logger(), "[engage_srv_converter] use_double_button: true");
+  } else {
+    sub_vehicle_button_ =
+      this->create_subscription<autoware_state_machine_msgs::msg::VehicleButton>(
+      "input/engage_button",
+      rclcpp::QoS{1}.transient_local(),
+      std::bind(&EngageSrvConverter::onVehicleButtonStatus, this, _1),
+      subscriber_option
+    );
+    RCLCPP_INFO(this->get_logger(), "[engage_srv_converter] use_double_button: false");
+  }
   // Client
   cli_engage_ = this->create_client<tier4_external_api_msgs::srv::Engage>(
     "/api/external/set/engage");
@@ -46,9 +77,38 @@ EngageSrvConverter::EngageSrvConverter(
 void EngageSrvConverter::onVehicleButtonStatus(
   const autoware_state_machine_msgs::msg::VehicleButton::SharedPtr msg)
 {
+  sendEngage(msg->data);
+}
+
+void EngageSrvConverter::onButtonPressed(const DoubleButtonJudge::Button button, const bool pressed)
+{
+  const auto verdict = judge_->onButton(button, pressed, this->now().seconds());
+  if (!verdict.judged) {
+    return;
+  }
+  if (!verdict.accepted) {
+    RCLCPP_INFO(
+      this->get_logger(), "[engage_srv_converter] double button is not valid. Engage is ignored.");
+    return;
+  }
+  RCLCPP_INFO(
+    this->get_logger(), "[engage_srv_converter] double button is valid (overlap %.2f sec).",
+    verdict.overlap_sec);
+
+  VehicleButton accepted;
+  accepted.stamp = this->now();
+  accepted.data = true;
+  accepted.hold_down_time = verdict.overlap_sec;
+  pub_double_engage_accepted_->publish(accepted);
+
+  sendEngage(true);
+}
+
+void EngageSrvConverter::sendEngage(const bool engage)
+{
   auto req =
     std::make_shared<tier4_external_api_msgs::srv::Engage::Request>();
-  req->engage = msg->data;
+  req->engage = engage;
 
   auto callback = [this](
     rclcpp::Client<tier4_external_api_msgs::srv::Engage>::SharedFuture future) {
